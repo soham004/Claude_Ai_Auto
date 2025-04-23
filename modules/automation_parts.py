@@ -113,8 +113,13 @@ def download_artifacts(driver:webdriver.Chrome, video_number:str):
         EC.presence_of_all_elements_located((By.XPATH, '//div[contains(@class, "artifact-block-cell ")]/parent::button[@aria-label="Preview contents"]'))
     )
     for i, artifact_button in enumerate(artifact_buttons):
-        chapter_name = artifact_button.find_element(By.XPATH, './/child::div[contains(@class, "leading-tight")]').text
-        print(f"Downloading artifact for chapter: {chapter_name}")
+        try:
+            chapter_name = artifact_button.find_element(By.XPATH, './/child::div[contains(@class, "leading-tight")]').text
+            print(f"Downloading artifact for chapter: {chapter_name}")
+        except Exception as e:
+            print(f"Error finding chapter name")
+            chapter_name = f"Chapter {i+1}"
+            print(f"Using chapter name:", chapter_name)
         js_click_element(driver, artifact_button)
         random_sleep(0.5, 1.5)
         # Wait for the download button to appear
