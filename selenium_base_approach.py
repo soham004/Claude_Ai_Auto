@@ -1,11 +1,33 @@
 from seleniumbase import Driver
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
-
+import sys
+import msvcrt
 from modules.automation_parts import *
 import json
 
+ 
+def wait_for_input(timeout):
+    """Waits for Enter key press with a timeout while displaying a countdown (Windows version)."""
+    start_time = time.time()
+    while True:
+        remaining_time = timeout - (time.time() - start_time)
+        if remaining_time <= 0:
+            print("\nTime's up!.")
+            return False  # Timeout reached
+        mins, secs = divmod(remaining_time, 60)
+        hours, mins = divmod(mins, 60)
+        sys.stdout.write("\rTime left: {:02d}:{:02d}:{:02d} Press Enter to resume Now... ".format(int(hours), int(mins), int(secs)) )
+        sys.stdout.flush()
 
+        # Check if a key was pressed
+        if msvcrt.kbhit():
+            key = msvcrt.getch()
+            if key == b'\r':  # Enter key is detected
+                print("\nUser pressed Enter!")
+                return True  # Input received
+
+        time.sleep(0.1)  # Reduce CPU usage
 
 def claude_automation():
     continue_generation = True
@@ -50,6 +72,9 @@ def claude_automation():
                     enter_prompt(driver, prompt)
                     # Wait for the response to be generated
                     wait_for_response(driver)
+                    if check_limit_reached(driver):
+                        print("Limit reached! waiting for 5 hours 10 mins...")
+                        wait_for_input((5 * 60 * 60)+10*60)  # Wait for 5 hours 10 minutes
                 
                 download_artifacts(driver, video_number)
         except Exception as e:

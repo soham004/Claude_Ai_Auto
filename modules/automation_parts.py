@@ -48,6 +48,11 @@ def random_sleep(min_seconds=1, max_seconds=3):
     """Sleep for a random amount of time between min and max seconds"""
     time.sleep(random.uniform(min_seconds, max_seconds))
 
+def check_limit_reached(driver:webdriver.Chrome)->bool:
+    page_html = driver.page_source
+    if "limit reached" in page_html:
+        return True
+    return False
 
 def handle_login(driver):
     """Handle the login process for Claude.ai"""
