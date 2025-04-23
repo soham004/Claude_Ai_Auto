@@ -18,8 +18,8 @@ def claude_automation():
             continue_generation = False
         except Exception as e:
             video_numbers = []
-            video_number = input("Enter the video number: ")
-            video_numbers.append(video_number)
+            video_number_initial = input("Enter the video number: ")
+            video_numbers.append(video_number_initial)
 
         
         # Initialize the driver directly using the Driver class
@@ -38,22 +38,23 @@ def claude_automation():
             # driver.get("https://claude.ai/chat/bda7d3ac-e54f-472b-9d70-2e194d58c52d")
             # random_sleep(1, 2)
             # download_artifacts(driver, video_number)
-            driver.get(config["project_link"])
+            for video_number in video_numbers:
+                driver.get(config["project_link"])
 
-            
-            initial_prompt = config["initial_prompt"].replace("<video_number>", video_number)
-            
-            enter_prompt(driver, initial_prompt)
-            wait_for_response(driver)
-
-            generation_prompts = config["generation_prompts"]
-            for prompt in generation_prompts:
-                # Click on the input field and enter the prompt
-                enter_prompt(driver, prompt)
-                # Wait for the response to be generated
+                
+                initial_prompt = config["initial_prompt"].replace("<video_number>", video_number)
+                
+                enter_prompt(driver, initial_prompt)
                 wait_for_response(driver)
-            
-            download_artifacts(driver, video_number)
+
+                generation_prompts = config["generation_prompts"]
+                for prompt in generation_prompts:
+                    # Click on the input field and enter the prompt
+                    enter_prompt(driver, prompt)
+                    # Wait for the response to be generated
+                    wait_for_response(driver)
+                
+                download_artifacts(driver, video_number)
 
             # driver.click('div[aria-label="Write your prompt to Claude"]')
             
