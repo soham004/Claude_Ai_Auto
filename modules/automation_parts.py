@@ -49,8 +49,10 @@ def random_sleep(min_seconds=1, max_seconds=3):
     time.sleep(random.uniform(min_seconds, max_seconds))
 
 def check_limit_reached(driver:webdriver.Chrome)->bool:
-    page_html = driver.page_source
-    if "limit reached" in page_html:
+
+    main_side = driver.find_element(By.XPATH, '/html/body/div[2]/div[2]/div/div[1]')
+    main_side_html = main_side.get_attribute('innerHTML')
+    if "limit reached" in main_side_html:
         return True
     return False
 
@@ -162,7 +164,7 @@ def enter_prompt(driver:webdriver.Chrome, prompt:str):
     for char in prompt:
         actions.send_keys(char)
         actions.perform()
-        random_sleep(0.05, 0.08)
+        random_sleep(0.02, 0.05)
     actions.send_keys(Keys.RETURN).perform()
 
 def wait_for_response(driver:webdriver.Chrome):
