@@ -96,8 +96,6 @@ def handle_login(driver):
         
         input("Please log in manually and press Enter when done...")
         save_cookies(driver)
-    
-    return driver
 
 
 def random_scroll(driver):

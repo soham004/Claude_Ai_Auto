@@ -6,11 +6,21 @@ from modules.automation_parts import *
 import json
 
 
-with open("config.json", "r") as f:
-    config = json.load(f)
+
 def claude_automation():
     continue_generation = True
+
+    driver = Driver(uc=True, headless=False)
+    driver.maximize_window()
+    # Handle login using the modularized function
+    handle_login(driver)
+
+    # Random human-like behavior
+    random_scroll(driver)
+
     while continue_generation:
+        with open("config.json", "r") as f:
+            config = json.load(f)
         try:
             video_numbers = config["video_numbers"]
             if len(video_numbers) == 0:
@@ -19,22 +29,9 @@ def claude_automation():
         except Exception as e:
             video_numbers = []
             video_number_initial = input("Enter the video number: ")
-            video_numbers.append(video_number_initial)
-
-        
-        # Initialize the driver directly using the Driver class
-        driver = Driver(uc=True, headless=False)
+            video_numbers.append(video_number_initial)        
         
         try:
-            # Configure the browser
-            driver.maximize_window()
-            
-            # Handle login using the modularized function
-            driver = handle_login(driver)
-            
-            # Random human-like behavior
-            random_scroll(driver)
-            
             # driver.get("https://claude.ai/chat/bda7d3ac-e54f-472b-9d70-2e194d58c52d")
             # random_sleep(1, 2)
             # download_artifacts(driver, video_number)
@@ -55,17 +52,11 @@ def claude_automation():
                     wait_for_response(driver)
                 
                 download_artifacts(driver, video_number)
-
-            # driver.click('div[aria-label="Write your prompt to Claude"]')
-            
-            # driver.send_keys('div[aria-label="Write your prompt to Claude"]', 'Create a video outline for Video #5. Refer to the Characters in the Project Knowledge. Ensure the chat name is named after the Video # that I just input. Here is the format "Video #x : Title Here"')
-            
-
-            input("Press Enter to close the browser...")
-        
-        finally:
-            save_cookies(driver)
-            driver.quit()
+        except Exception as e:
+            print(f"An error occurred: {e}")
+        # finally:
+    save_cookies(driver)
+    driver.quit()
 
 if __name__ == "__main__":
     claude_automation()
