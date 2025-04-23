@@ -1,3 +1,5 @@
 *.pkl
 *.lock
 *.pyc
+config.json
+extract_cookies.py

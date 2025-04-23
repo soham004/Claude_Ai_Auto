@@ -11,7 +11,7 @@ def load_cookies():
             return pickle.load(f)
     return None
 
-def save_cookies(driver:Driver):
+def save_cookies(driver):
     """Save cookies to file"""
     all_cookies = driver.get_cookies()
     cookie_dict = {cookie["name"]: cookie["value"] for cookie in all_cookies 
@@ -24,7 +24,7 @@ def random_sleep(min_seconds=1, max_seconds=3):
     """Sleep for a random amount of time between min and max seconds"""
     time.sleep(random.uniform(min_seconds, max_seconds))
 
-def handle_login(driver:Driver):
+def handle_login(driver):
     """Handle the login process for Claude.ai"""
     # Navigate to Claude.ai
     driver.get("about:blank")  # Start with blank page
@@ -37,16 +37,20 @@ def handle_login(driver:Driver):
         random_sleep(1, 2)
         
         # Add cookies
+        print("Adding cookies...")
         for name, value in cookies.items():
             driver.add_cookie({"name": name, "value": value, "domain": ".claude.ai"})
         
         # Navigate to chats page
         random_sleep(0.5, 1)
         driver.get("https://claude.ai/projects")
-        random_sleep(2, 3)
+        random_sleep(4, 5)
         
         # Check if we need to log in again
-        if "Log in" in driver.page_source:
+        current_url = driver.current_url
+        print(f"Current URL: {current_url}")
+        
+        if "login" in current_url:
             print("Cookies expired or invalid, please log in manually")
             driver.get("https://claude.ai")
             input("Press Enter after you've logged in...")
@@ -57,7 +61,7 @@ def handle_login(driver:Driver):
         
         # Check for Cloudflare challenge
         try:
-            if driver.find_element("css selector", "iframe[src*='cloudflare']"):
+            if driver.find_element("iframe[src*='cloudflare']","css selector"):
                 print("⚠️ Cloudflare challenge detected! Please solve it manually.")
                 input("Press Enter after solving the Cloudflare challenge...")
         except:
@@ -68,14 +72,14 @@ def handle_login(driver:Driver):
     
     return driver
 
-def random_scroll(driver:Driver):
+def random_scroll(driver):
     """Perform random scrolling to appear more human-like"""
     for _ in range(random.randint(1, 3)):
         scroll_amount = random.randint(100, 300)
         driver.execute_script(f"window.scrollBy(0, {scroll_amount});")
         random_sleep(0.3, 0.7)
 
-def slow_type(driver:Driver, element, text):
+def slow_type(driver, element, text):
     """Type text with random delays between keystrokes"""
     element.click()
     
