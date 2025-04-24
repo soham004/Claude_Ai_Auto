@@ -88,10 +88,9 @@ def claude_automation():
 
     driver = Driver(uc=True, headless=False)
     driver.maximize_window()
-    # Handle login using the modularized function
+
     handle_login(driver, account)
 
-    # Random human-like behavior
     random_scroll(driver)
     try:
         while continue_generation:
@@ -100,6 +99,7 @@ def claude_automation():
                 print(f"Config file not found for account {account}.")
                 continue_generation = False
                 break
+            
             with open(config_path, "r") as f:
                 config = json.load(f)
                 try:
@@ -112,6 +112,7 @@ def claude_automation():
                     print(f"Missing key in config file for account {account}: {e}")
                     continue_generation = False
                     break
+            
             try:
                 video_numbers = config["video_numbers"]
                 if len(video_numbers) == 0:
@@ -135,26 +136,27 @@ def claude_automation():
                         print(f"Warning: '{text_to_be_replaced}' not found in the initial prompt.")
                         input("Press Enter to continue...")
                     
-                    # initial_prompt = config["initial_prompt"].replace(config["text_to_be_replaced_by_video_number"], video_number)
                     
                     
                     print(f"Entering Initial Prompt: {initial_prompt}")
                     enter_prompt(driver, initial_prompt)
                     if check_limit_reached(driver):
                         limit_reached_seq(driver)
-                    # Wait for the response to be generated
+
                     wait_for_response(driver)
 
                     generation_prompts = config["generation_prompts"]
                     for i, prompt in enumerate(generation_prompts):
                         print(f"Entering Prompt {i+1}: {prompt}")
+                        
                         if check_limit_reached(driver):
                             limit_reached_seq(driver)
-                        # Click on the input field and enter the prompt
+
                         enter_prompt(driver, prompt)
+
                         if check_limit_reached(driver):
                             limit_reached_seq(driver)
-                        # Wait for the response to be generated
+
                         wait_for_response(driver)
                         
                     

@@ -127,6 +127,7 @@ def download_artifacts(driver:webdriver.Chrome, video_number:str, account:str):
     artifact_buttons = WebDriverWait(driver, 10).until(
         EC.presence_of_all_elements_located((By.XPATH, '//div[contains(@class, "artifact-block-cell ")]/parent::button[@aria-label="Preview contents"]'))
     )
+    video_name = ""
     for i, artifact_button in enumerate(artifact_buttons):
         try:
             chapter_name = artifact_button.find_element(By.XPATH, './/child::div[contains(@class, "leading-tight")]').text
@@ -144,15 +145,19 @@ def download_artifacts(driver:webdriver.Chrome, video_number:str, account:str):
         complete_text = ""
         for paragraph in artifact_section_paragraphs:
             complete_text += paragraph.text + "\n"
-
-        try:
-            video_name_element = driver.find_element(By.XPATH, '//button[@data-testid="chat-menu-trigger"]/div/div')
-            video_name = video_name_element.text
-            video_name = clean_file_name(video_name)
-        except Exception as e:
-            print("Error finding video name element:", e)
-            video_name = f"Video_{video_number}"
-        print(f"Using {video_name} as video name")
+        
+        if video_name == "":
+            try:
+                video_name_element = driver.find_element(By.XPATH, '//button[@data-testid="chat-menu-trigger"]/div/div')
+                video_name = video_name_element.text
+                video_name = clean_file_name(video_name)
+                video_name = video_name + f"_{video_number}"
+            except Exception as e:
+                print("Error finding video name element:", e)
+                video_name = f"Video_{video_number}"
+            
+            print(f"Using {video_name} as video name")
+        
         output_dir = os.path.join("outputFiles", account, video_name)
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
