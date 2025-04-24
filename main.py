@@ -38,15 +38,9 @@ def select_account():
     print("Available accounts:")
     for i, account in enumerate(accounts):
         print(f"{i + 1}. {account}")
-    print(f"{len(accounts) + 1}. Add a new account")
     choice = input("Select an account (1-{}): ".format(len(accounts)+1))
     if choice.isdigit() and 1 <= int(choice) <= len(accounts):
         return accounts[int(choice) - 1]
-    elif choice == str(len(accounts) + 1):
-        new_account = input("Enter the name for the new account: ")
-        new_account = clean_file_name(new_account)
-        os.makedirs(os.path.join("accounts", new_account), exist_ok=True)
-        return new_account
 
 
 def claude_automation():
