@@ -151,8 +151,14 @@ def download_artifacts(driver:webdriver.Chrome, video_number:str, account:str):
         for paragraph in artifact_section_paragraphs:
             complete_text += paragraph.text + "\n"
 
-        
-        output_dir = os.path.join("outputFiles", account, f"Video_{video_number}")
+        try:
+            video_name_element = driver.find_element(By.XPATH, '//button[@data-testid="chat-menu-trigger"]/div/div')
+            video_name = video_name_element.text
+            video_name = clean_file_name(video_name)
+        except Exception as e:
+            print("Error finding video name element:", e)
+            video_name = f"Video_{video_number}"
+        output_dir = os.path.join("outputFiles", account, video_name)
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
         with open(os.path.join(output_dir, f"{clean_file_name(chapter_title)}.txt"), "w", encoding="utf-8") as f:
