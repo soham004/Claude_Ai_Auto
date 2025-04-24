@@ -83,7 +83,7 @@ def handle_login(driver:webdriver.Chrome, account:str):
         
         # Check if we need to log in again
         current_url = driver.current_url
-        print(f"Current URL: {current_url}")
+        # print(f"Current URL: {current_url}")
         
         if "login" in current_url:
             print("Cookies expired or invalid, please log in manually")
@@ -115,7 +115,7 @@ def random_scroll(driver):
         random_sleep(0.3, 0.7)
 
 
-def download_artifacts(driver:webdriver.Chrome, video_number:str):
+def download_artifacts(driver:webdriver.Chrome, video_number:str, account:str):
     artifact_buttons = WebDriverWait(driver, 10).until(
         EC.presence_of_all_elements_located((By.XPATH, '//div[contains(@class, "artifact-block-cell ")]/parent::button[@aria-label="Preview contents"]'))
     )
@@ -145,7 +145,8 @@ def download_artifacts(driver:webdriver.Chrome, video_number:str):
         for paragraph in artifact_section_paragraphs:
             complete_text += paragraph.text + "\n"
 
-        output_dir = os.path.join("outputFiles", f"Video_{video_number}")
+        
+        output_dir = os.path.join("outputFiles", account, f"Video_{video_number}")
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
         with open(os.path.join(output_dir, f"{clean_file_name(chapter_title)}.txt"), "w", encoding="utf-8") as f:

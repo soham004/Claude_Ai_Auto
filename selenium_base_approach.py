@@ -44,6 +44,7 @@ def select_account():
         return accounts[int(choice) - 1]
     elif choice == str(len(accounts) + 1):
         new_account = input("Enter the name for the new account: ")
+        new_account = clean_file_name(new_account)
         os.makedirs(os.path.join("accounts", new_account), exist_ok=True)
         return new_account
 
@@ -69,6 +70,16 @@ def claude_automation():
                 break
             with open(config_path, "r") as f:
                 config = json.load(f)
+                try:
+                    config["project_link"]
+                    config["initial_prompt"]
+                    config["generation_prompts"]
+                    config["text_to_be_replaced_by_video_number"]
+                    config["video_numbers"]
+                except KeyError as e:
+                    print(f"Missing key in config file for account {account}: {e}")
+                    continue_generation = False
+                    break
             try:
                 video_numbers = config["video_numbers"]
                 if len(video_numbers) == 0:
@@ -80,9 +91,6 @@ def claude_automation():
                 video_numbers.append(video_number_initial)        
             
             try:
-                # driver.get("https://claude.ai/chat/bda7d3ac-e54f-472b-9d70-2e194d58c52d")
-                # random_sleep(1, 2)
-                # download_artifacts(driver, video_number)
                 for video_number in video_numbers:
                     driver.get(config["project_link"])
 
@@ -95,7 +103,8 @@ def claude_automation():
                     wait_for_response(driver)
 
                     generation_prompts = config["generation_prompts"]
-                    for prompt in generation_prompts:
+                    for i, prompt in enumerate(generation_prompts):
+                        print(f"Entering Prompt {i+1}: {prompt}")
                         if check_limit_reached(driver):
                             print("Limit reached! waiting for 5 hours 10 mins...")
                             wait_for_input((5 * 60 * 60)+10*60)  # Wait for 5 hours 10 minutes
@@ -105,7 +114,7 @@ def claude_automation():
                         wait_for_response(driver)
                         
                     
-                    download_artifacts(driver, video_number)
+                    download_artifacts(driver, video_number, account)
             except Exception as e:
                 print(f"An error occurred: {e}")
     finally:
