@@ -132,10 +132,20 @@ def download_artifacts(driver:webdriver.Chrome, video_number:str, account:str):
         try:
             chapter_name = artifact_button.find_element(By.XPATH, './/child::div[contains(@class, "leading-tight")]').text
             print(f"Downloading artifact for chapter: {chapter_name}")
+            if "chapter " not in chapter_name.lower()[:15]:
+                raise Exception("Chapter name not found")
         except Exception as e:
-            print(f"Error finding chapter name")
-            chapter_name = f"Chapter {i+1}"
-            print(f"Using chapter name:", chapter_name)
+            try:
+                chapter_title = WebDriverWait(driver, 10).until(
+                    EC.presence_of_element_located((By.XPATH, '//div[@id="markdown-artifact"]//h1'))
+                ).text
+                if "chapter " not in chapter_title.lower()[:15]:
+                    raise Exception("Chapter name not found")
+                chapter_name = chapter_title
+            except Exception as e: 
+                print(f"Error finding chapter name")
+                chapter_name = f"Chapter {i+1}"
+                print(f"Using chapter name:", chapter_name)
         js_click_element(driver, artifact_button)
         random_sleep(0.5, 1.5)
         # Wait for the download button to appear
@@ -145,7 +155,6 @@ def download_artifacts(driver:webdriver.Chrome, video_number:str, account:str):
         complete_text = ""
         for paragraph in artifact_section_paragraphs:
             complete_text += paragraph.text + "\n"
-        
         if video_name == "":
             try:
                 video_name_element = driver.find_element(By.XPATH, '//button[@data-testid="chat-menu-trigger"]/div/div')
