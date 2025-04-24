@@ -158,6 +158,7 @@ def download_artifacts(driver:webdriver.Chrome, video_number:str, account:str):
         except Exception as e:
             print("Error finding video name element:", e)
             video_name = f"Video_{video_number}"
+        print(f"Using {video_name} as video name")
         output_dir = os.path.join("outputFiles", account, video_name)
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
