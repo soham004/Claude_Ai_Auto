@@ -94,8 +94,15 @@ def claude_automation():
                 for video_number in video_numbers:
                     driver.get(config["project_link"])
 
-                    
-                    initial_prompt = config["initial_prompt"].replace(config["text_to_be_replaced_by_video_number"], video_number)
+                    text_to_be_replaced = config["text_to_be_replaced_by_video_number"]
+                    initial_prompt = config["initial_prompt"]
+
+                    if text_to_be_replaced in initial_prompt:
+                        initial_prompt = initial_prompt.replace(text_to_be_replaced, video_number)
+                    else:
+                        print(f"Warning: '{text_to_be_replaced}' not found in the initial prompt.")
+                        input("Press Enter to continue...")
+                    # initial_prompt = config["initial_prompt"].replace(config["text_to_be_replaced_by_video_number"], video_number)
                     if check_limit_reached(driver):
                         print("Limit reached! waiting for 5 hours 10 mins...")
                         wait_for_input((5 * 60 * 60)+10*60)  # Wait for 5 hours 10 minutes
