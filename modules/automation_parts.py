@@ -26,20 +26,22 @@ def js_click_element(driver:webdriver.Chrome, element):
     driver.execute_script("arguments[0].click();", element)
 
 
-def load_cookies():
+def load_cookies(account:str)->dict:
     """Load cookies from file"""
-    if os.path.exists("claude_cookies.pkl"):
-        with open("claude_cookies.pkl", "rb") as f:
+    cookie_file_path = os.path.join("accounts", account, "claude_cookies.pkl")
+    if os.path.exists(cookie_file_path):
+        with open(cookie_file_path, "rb") as f:
             return pickle.load(f)
     return None
 
 
-def save_cookies(driver):
+def save_cookies(driver, account):
     """Save cookies to file"""
     all_cookies = driver.get_cookies()
     cookie_dict = {cookie["name"]: cookie["value"] for cookie in all_cookies 
                 if ".claude.ai" in cookie.get("domain", "")}
-    with open("claude_cookies.pkl", "wb") as f:
+    cookie_file_path = os.path.join("accounts", account, "claude_cookies.pkl")
+    with open(cookie_file_path, "wb") as f:
         pickle.dump(cookie_dict, f)
     print("Cookies saved successfully")
 
@@ -56,14 +58,14 @@ def check_limit_reached(driver:webdriver.Chrome)->bool:
         return True
     return False
 
-def handle_login(driver):
+def handle_login(driver:webdriver.Chrome, account:str):
     """Handle the login process for Claude.ai"""
     # Navigate to Claude.ai
     driver.get("about:blank")  # Start with blank page
     random_sleep(0.5, 1.5)
     
    
-    cookies = load_cookies()  # Try to load cookies if they exist
+    cookies = load_cookies(account)  # Try to load cookies if they exist
     if cookies:
         print("Cookies found, attempting to log in...")
         driver.get("https://claude.ai")
@@ -87,7 +89,7 @@ def handle_login(driver):
             print("Cookies expired or invalid, please log in manually")
             driver.get("https://claude.ai")
             input("Press Enter after you've logged in...")
-            save_cookies(driver)
+            save_cookies(driver, account)
     else:
         print("No cookies found, please log in manually")
         # First time login
@@ -102,7 +104,7 @@ def handle_login(driver):
             pass
         
         input("Please log in manually and press Enter when done...")
-        save_cookies(driver)
+        save_cookies(driver, account)
 
 
 def random_scroll(driver):

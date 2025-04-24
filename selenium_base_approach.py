@@ -29,19 +29,45 @@ def wait_for_input(timeout):
 
         time.sleep(0.1)  # Reduce CPU usage
 
+
+def select_account():
+    accounts = [f for f in os.listdir("accounts") if os.path.isdir(os.path.join("accounts", f))]
+    if not accounts:
+        print("No accounts found in the 'accounts' directory.")
+        return None
+    print("Available accounts:")
+    for i, account in enumerate(accounts):
+        print(f"{i + 1}. {account}")
+    print(f"{len(accounts) + 1}. Add a new account")
+    choice = input("Select an account (1-{}): ".format(len(accounts)+1))
+    if choice.isdigit() and 1 <= int(choice) <= len(accounts):
+        return accounts[int(choice) - 1]
+    elif choice == str(len(accounts) + 1):
+        new_account = input("Enter the name for the new account: ")
+        os.makedirs(os.path.join("accounts", new_account), exist_ok=True)
+        return new_account
+
+
 def claude_automation():
     continue_generation = True
+
+    account = select_account()
 
     driver = Driver(uc=True, headless=False)
     driver.maximize_window()
     # Handle login using the modularized function
-    handle_login(driver)
+    handle_login(driver, account)
 
     # Random human-like behavior
     random_scroll(driver)
     try:
         while continue_generation:
-            with open("config.json", "r") as f:
+            config_path = os.path.join("accounts", account, "config.json")
+            if not os.path.exists(config_path):
+                print(f"Config file not found for account {account}.")
+                continue_generation = False
+                break
+            with open(config_path, "r") as f:
                 config = json.load(f)
             try:
                 video_numbers = config["video_numbers"]
@@ -61,7 +87,7 @@ def claude_automation():
                     driver.get(config["project_link"])
 
                     
-                    initial_prompt = config["initial_prompt"].replace("<video_number>", video_number)
+                    initial_prompt = config["initial_prompt"].replace(config["text_to_be_replaced_by_video_number"], video_number)
                     if check_limit_reached(driver):
                         print("Limit reached! waiting for 5 hours 10 mins...")
                         wait_for_input((5 * 60 * 60)+10*60)  # Wait for 5 hours 10 minutes
@@ -83,7 +109,7 @@ def claude_automation():
             except Exception as e:
                 print(f"An error occurred: {e}")
     finally:
-        save_cookies(driver)
+        save_cookies(driver, account)
         driver.quit()
 
 if __name__ == "__main__":
