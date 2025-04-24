@@ -38,7 +38,7 @@ def select_account():
     print("Available accounts:")
     for i, account in enumerate(accounts):
         print(f"{i + 1}. {account}")
-    choice = input("Select an account (1-{}): ".format(len(accounts)+1))
+    choice = input("Select an account (1-{}): ".format(len(accounts)))
     if choice.isdigit() and 1 <= int(choice) <= len(accounts):
         return accounts[int(choice) - 1]
 
