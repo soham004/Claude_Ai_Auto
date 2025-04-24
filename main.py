@@ -37,6 +37,7 @@ def sleep_until_time(time_str):
     
     # Calculate seconds until target time
     seconds_to_wait = (target_datetime - now).total_seconds()
+    seconds_to_wait += 10*60  # Add 10 minutes buffer
     
     print(f"Waiting until {time_str} ({seconds_to_wait:.0f} seconds from now)")
     
