@@ -52,17 +52,19 @@ def random_sleep(min_seconds=1, max_seconds=3):
 
 def check_limit_reached(driver:webdriver.Chrome)->bool:
     try:
-        main_side = driver.find_element(By.XPATH, '/html/body/div[2]/div[2]/div/div[1]')
-    except Exception as e:
-        try:
-            main_side = driver.find_element(By.XPATH, '/html/body/div[2]/div[2]/div/main/div[1]')
-        except Exception as e:
-            print("Error finding element for limit check:", e)
-            return False
-    main_side_html = main_side.get_attribute('innerHTML')
-    if "limit reached" in main_side_html:
+        driver.find_element(By.XPATH, '//div[contains(text(), "limit reached")]')
         return True
-    return False
+    except Exception as e:
+        return False
+def get_reactivation_time(driver:webdriver.Chrome)->str:
+    try:
+        reactivation_time_element = driver.find_element(By.XPATH, '//div[contains(text(), "limit reached")]/span')
+        reactivation_time = reactivation_time_element.text
+        print(f"Reactivation time: {reactivation_time}")
+        return reactivation_time
+    except Exception as e:
+        print("Error getting reactivation time:", e)
+        return None
 
 def handle_login(driver:webdriver.Chrome, account:str):
     """Handle the login process for Claude.ai"""
@@ -136,14 +138,6 @@ def download_artifacts(driver:webdriver.Chrome, video_number:str, account:str):
         js_click_element(driver, artifact_button)
         random_sleep(0.5, 1.5)
         # Wait for the download button to appear
-        try:
-            chapter_title = WebDriverWait(driver, 10).until(
-                EC.presence_of_element_located((By.XPATH, '//div[@id="markdown-artifact"]//h1'))
-            ).text
-        except TimeoutException:
-            print("Chapter title not found! Using chapter name instead.")
-            chapter_title = chapter_name
-            continue
         artifact_section_paragraphs = WebDriverWait(driver, 10).until(
             EC.presence_of_all_elements_located((By.XPATH, '//div[@id="markdown-artifact"]//p'))
         )
@@ -162,9 +156,9 @@ def download_artifacts(driver:webdriver.Chrome, video_number:str, account:str):
         output_dir = os.path.join("outputFiles", account, video_name)
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
-        with open(os.path.join(output_dir, f"{clean_file_name(chapter_title)}.txt"), "w", encoding="utf-8") as f:
+        with open(os.path.join(output_dir, f"{clean_file_name(chapter_name)}.txt"), "w", encoding="utf-8") as f:
             f.write(complete_text)
-        print(f"Artifact for chapter '{chapter_title}' downloaded successfully.")
+        print(f"Artifact for chapter '{chapter_name}' downloaded successfully.")
 
 
 def enter_prompt(driver:webdriver.Chrome, prompt:str):
@@ -182,6 +176,7 @@ def enter_prompt(driver:webdriver.Chrome, prompt:str):
         actions.perform()
         random_sleep(0.02, 0.05)
     actions.send_keys(Keys.RETURN).perform()
+    random_sleep(1, 1.5)
 
 def wait_for_response(driver:webdriver.Chrome):
     while True:

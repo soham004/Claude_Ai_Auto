@@ -6,7 +6,45 @@ import msvcrt
 from modules.automation_parts import *
 import json
 
- 
+
+def sleep_until_time(time_str):
+    """
+    Sleep until the specified time. If the time has already passed today,
+    assume it's for tomorrow.
+    
+    Args:
+        time_str: String in format "1:30 AM" or similar
+    """
+    import datetime
+    import time
+    
+    # Parse the time string
+    try:
+        target_time = datetime.datetime.strptime(time_str.strip(), "%I:%M %p").time()
+    except ValueError:
+        print(f"Error: Could not parse time string '{time_str}'. Expected format like '1:30 AM'")
+        return
+    
+    # Get current time
+    now = datetime.datetime.now()
+    
+    # Create target datetime (combines today's date with target time)
+    target_datetime = datetime.datetime.combine(now.date(), target_time)
+    
+    # If target time has already passed today, set it for tomorrow
+    if target_datetime < now:
+        target_datetime += datetime.timedelta(days=1)
+    
+    # Calculate seconds until target time
+    seconds_to_wait = (target_datetime - now).total_seconds()
+    
+    print(f"Waiting until {time_str} ({seconds_to_wait:.0f} seconds from now)")
+    
+    # Using your existing wait_for_input function which shows a countdown
+    # and allows user to skip by pressing Enter
+    return wait_for_input(seconds_to_wait)
+
+
 def wait_for_input(timeout):
     """Waits for Enter key press with a timeout while displaying a countdown (Windows version)."""
     start_time = time.time()
@@ -96,22 +134,26 @@ def claude_automation():
                     else:
                         print(f"Warning: '{text_to_be_replaced}' not found in the initial prompt.")
                         input("Press Enter to continue...")
+                    
                     # initial_prompt = config["initial_prompt"].replace(config["text_to_be_replaced_by_video_number"], video_number)
-                    if check_limit_reached(driver):
-                        print("Limit reached! waiting for 5 hours 10 mins...")
-                        wait_for_input((5 * 60 * 60)+10*60)  # Wait for 5 hours 10 minutes
+                    
+                    
                     print(f"Entering Initial Prompt: {initial_prompt}")
                     enter_prompt(driver, initial_prompt)
+                    if check_limit_reached(driver):
+                        limit_reached_seq(driver)
+                    # Wait for the response to be generated
                     wait_for_response(driver)
 
                     generation_prompts = config["generation_prompts"]
                     for i, prompt in enumerate(generation_prompts):
                         print(f"Entering Prompt {i+1}: {prompt}")
                         if check_limit_reached(driver):
-                            print("Limit reached! waiting for 5 hours 10 mins...")
-                            wait_for_input((5 * 60 * 60)+10*60)  # Wait for 5 hours 10 minutes
+                            limit_reached_seq(driver)
                         # Click on the input field and enter the prompt
                         enter_prompt(driver, prompt)
+                        if check_limit_reached(driver):
+                            limit_reached_seq(driver)
                         # Wait for the response to be generated
                         wait_for_response(driver)
                         
@@ -129,6 +171,13 @@ def claude_automation():
     finally:
         save_cookies(driver, account)
         driver.quit()
+
+def limit_reached_seq(driver):
+    print("Limit reached! waiting for 5 hours 10 mins...")
+    reactivation_time = get_reactivation_time(driver)
+    sleep_until_time(reactivation_time)
+    driver.get(driver.current_url)
+    ActionChains(driver).send_keys(Keys.RETURN).perform()
 
 if __name__ == "__main__":
     claude_automation()
