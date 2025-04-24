@@ -51,8 +51,14 @@ def random_sleep(min_seconds=1, max_seconds=3):
     time.sleep(random.uniform(min_seconds, max_seconds))
 
 def check_limit_reached(driver:webdriver.Chrome)->bool:
-
-    main_side = driver.find_element(By.XPATH, '/html/body/div[2]/div[2]/div/div[1]')
+    try:
+        main_side = driver.find_element(By.XPATH, '/html/body/div[2]/div[2]/div/div[1]')
+    except Exception as e:
+        try:
+            main_side = driver.find_element(By.XPATH, '/html/body/div[2]/div[2]/div/main/div[1]')
+        except Exception as e:
+            print("Error finding element for limit check:", e)
+            return False
     main_side_html = main_side.get_attribute('innerHTML')
     if "limit reached" in main_side_html:
         return True

@@ -93,12 +93,8 @@ def claude_automation():
             try:
                 for video_number in video_numbers:
                     driver.get(config["project_link"])
-
-                    
                     initial_prompt = config["initial_prompt"].replace(config["text_to_be_replaced_by_video_number"], video_number)
-                    if check_limit_reached(driver):
-                        print("Limit reached! waiting for 5 hours 10 mins...")
-                        wait_for_input((5 * 60 * 60)+10*60)  # Wait for 5 hours 10 minutes
+                    
                     enter_prompt(driver, initial_prompt)
                     wait_for_response(driver)
 
@@ -107,10 +103,9 @@ def claude_automation():
                         print(f"Entering Prompt {i+1}: {prompt}")
                         if check_limit_reached(driver):
                             print("Limit reached! waiting for 5 hours 10 mins...")
-                            wait_for_input((5 * 60 * 60)+10*60)  # Wait for 5 hours 10 minutes
-                        # Click on the input field and enter the prompt
+                            wait_for_input((5 * 60 * 60)+10*60)  # wait for 5 hours 10 minutes
+                        
                         enter_prompt(driver, prompt)
-                        # Wait for the response to be generated
                         wait_for_response(driver)
                         
                     
