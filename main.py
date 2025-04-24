@@ -125,6 +125,13 @@ def claude_automation():
                     download_artifacts(driver, video_number, account)
             except Exception as e:
                 print(f"An error occurred: {e}")
+
+            choice = input(f"Do you want to continue with an updated config?\n(Please update the config file of the {account} account before pressing enter)\nChoice(y/n): ")
+            if 'y' in choice.lower():
+                continue_generation = True
+            else:
+                continue_generation = False
+                print("Exiting the program.")
     finally:
         save_cookies(driver, account)
         driver.quit()
