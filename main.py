@@ -77,9 +77,15 @@ def select_account():
     print("Available accounts:")
     for i, account in enumerate(accounts):
         print(f"{i + 1}. {account}")
-    choice = input("Select an account (1-{}): ".format(len(accounts)))
-    if choice.isdigit() and 1 <= int(choice) <= len(accounts):
-        return accounts[int(choice) - 1]
+
+    while True:
+        choice = input("Select an account (1-{}): ".format(len(accounts)))
+        if choice.isdigit() and 1 <= int(choice) <= len(accounts):
+            print(f"Selected account: {accounts[int(choice) - 1]}")
+            return accounts[int(choice) - 1]
+        else:
+            print("Invalid choice.")
+        
 
 
 def claude_automation():
@@ -92,7 +98,6 @@ def claude_automation():
             if len(video_numbers) != 2:
                 raise ValueError("Invalid input")
             print(f"Selected video numbers: {video_numbers[0]} to {video_numbers[1]}\ni.e. {[i for i in range(int(video_numbers[0]), int(video_numbers[1]) + 1)]}")
-            continue_generation = False
             break
         except Exception as e:
             print(f"Error: {e}. Please enter the video numbers in the format 'start-end'.")
@@ -100,8 +105,8 @@ def claude_automation():
     driver.maximize_window()
 
     handle_login(driver, account)
-
-    random_scroll(driver)
+    print("Login successful!")
+    # random_scroll(driver)
     try:
         while continue_generation:
             config_path = os.path.join("accounts", account, "config.json")
@@ -132,7 +137,7 @@ def claude_automation():
                     initial_prompt = config["initial_prompt"]
 
                     if text_to_be_replaced in initial_prompt:
-                        initial_prompt = initial_prompt.replace(text_to_be_replaced, video_number)
+                        initial_prompt = initial_prompt.replace(text_to_be_replaced, str(video_number))
                     else:
                         print(f"Warning: '{text_to_be_replaced}' not found in the initial prompt.")
                         input("Press Enter to continue...")
@@ -165,13 +170,23 @@ def claude_automation():
             except Exception as e:
                 print(f"An error occurred: {e}")
 
-            choice = input(f"Do you want to continue with an updated config?\n(Please update the config file of the {account} account before pressing enter)\nChoice(y/n): ")
+            choice = input(f"Do you want to continue with different video numbers? (y/n): ")
             if 'y' in choice.lower():
                 continue_generation = True
+                while True:
+                    try:
+                        video_numbers = input("Enter the video numbers (range eg 1-15): ").split("-")
+                        if len(video_numbers) != 2:
+                            raise ValueError("Invalid input")
+                        print(f"Selected video numbers: {video_numbers[0]} to {video_numbers[1]}\ni.e. {[i for i in range(int(video_numbers[0]), int(video_numbers[1]) + 1)]}")
+                        break
+                    except Exception as e:
+                        print(f"Error: {e}. Please enter the video numbers in the format 'start-end'.")
             else:
                 continue_generation = False
                 print("Exiting the program.")
     finally:
+        # logging.error(f"An error occurred: {e}")
         save_cookies(driver, account)
         driver.quit()
 

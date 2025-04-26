@@ -5,3 +5,4 @@ config.json
 extract_cookies.py
 *.txt
 *.backup
+*.log
