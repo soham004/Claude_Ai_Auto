@@ -86,7 +86,16 @@ def claude_automation():
     continue_generation = True
 
     account = select_account()
-
+    while True:
+        try:
+            video_numbers = input("Enter the video numbers (range eg 1-15): ").split("-")
+            if len(video_numbers) != 2:
+                raise ValueError("Invalid input")
+            print(f"Selected video numbers: {video_numbers[0]} to {video_numbers[1]}\ni.e. {[i for i in range(int(video_numbers[0]), int(video_numbers[1]) + 1)]}")
+            continue_generation = False
+            break
+        except Exception as e:
+            print(f"Error: {e}. Please enter the video numbers in the format 'start-end'.")
     driver = Driver(uc=True, headless=False)
     driver.maximize_window()
 
@@ -108,24 +117,15 @@ def claude_automation():
                     config["initial_prompt"]
                     config["generation_prompts"]
                     config["text_to_be_replaced_by_video_number"]
-                    config["video_numbers"]
                 except KeyError as e:
                     print(f"Missing key in config file for account {account}: {e}")
                     continue_generation = False
                     break
+                   
             
             try:
-                video_numbers = config["video_numbers"]
-                if len(video_numbers) == 0:
-                    raise ValueError("No video numbers provided in the config file.")
-                continue_generation = False
-            except Exception as e:
-                video_numbers = []
-                video_number_initial = input("Enter the video number: ")
-                video_numbers.append(video_number_initial)        
-            
-            try:
-                for video_number in video_numbers:
+                for video_number in range(int(video_numbers[0]), int(video_numbers[1]) + 1):
+                    print(f"Processing video number: {video_number}")
                     driver.get(config["project_link"])
 
                     text_to_be_replaced = config["text_to_be_replaced_by_video_number"]

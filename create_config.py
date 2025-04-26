@@ -265,28 +265,6 @@ def create_config_file(account_name):
         
         config["generation_prompts"].append(chapter_prompt)
     
-    # Video numbers
-    print("\n" + "-" * 40)
-    print("🎬 VIDEO NUMBERS")
-    print("-" * 40)
-    print("Enter the video numbers to generate content for (comma-separated).")
-    print("These numbers will replace the placeholder in your initial prompt.")
-    print("Example: 1,2,3")
-    print("Leave empty to enter the video number when running the main script.")
-    
-    default = config.get("video_numbers", [])
-    if default:
-        print(f"Current video numbers: {', '.join(default)}")
-    
-    video_numbers_input = input(f"Enter video numbers{' (press Enter to keep current)' if default else ''}: ").strip()
-    if video_numbers_input:
-        config["video_numbers"] = [num.strip() for num in video_numbers_input.split(",")]
-    elif default:
-        config["video_numbers"] = default
-    else:
-        config["video_numbers"] = []
-        print("No video numbers specified. You'll be prompted during execution.")
-    
     # Review config before saving
     print("\n" + "=" * 60)
     print(" CONFIGURATION REVIEW ".center(60, "="))
@@ -296,7 +274,6 @@ def create_config_file(account_name):
     print(f"Text Placeholder: {config['text_to_be_replaced_by_video_number']}")
     print(f"Initial Prompt: {config['initial_prompt'][:50]}..." if len(config['initial_prompt']) > 50 else f"Initial Prompt: {config['initial_prompt']}")
     print(f"Number of Chapters: {len(config['generation_prompts'])}")
-    print(f"Video Numbers: {', '.join(config['video_numbers']) if config['video_numbers'] else 'To be entered during execution'}")
     
     save = input("\nSave this configuration? (y/n): ")
     if save.lower() != 'y':

@@ -173,6 +173,23 @@ def download_artifacts(driver:webdriver.Chrome, video_number:str, account:str):
         with open(os.path.join(output_dir, f"{clean_file_name(chapter_name)}.txt"), "w", encoding="utf-8") as f:
             f.write(complete_text)
         print(f"Artifact for chapter '{chapter_name}' downloaded successfully.")
+    
+    # After all artifacts are downloaded, rename them based on modification time
+    output_dir = os.path.join("outputFiles", account, video_name)
+    
+    # Get all .txt files in the directory
+    files = [os.path.join(output_dir, f) for f in os.listdir(output_dir) if f.endswith('.txt')]
+    
+    # Sort files by modification time
+    files.sort(key=os.path.getmtime)
+
+    
+    
+    # Rename files to chapter-1, chapter-2, etc.
+    for i, file_path in enumerate(files, 1):
+        new_name = os.path.join(output_dir, f"Chapter-{i}.txt")
+        os.rename(file_path, new_name)
+        print(f"Renamed {os.path.basename(file_path)} to Chapter-{i}.txt")
 
 
 def enter_prompt(driver:webdriver.Chrome, prompt:str):
@@ -215,4 +232,4 @@ def wait_for_response(driver:webdriver.Chrome):
             break
             
         random_sleep(0.5, 1.5)
-    
+
