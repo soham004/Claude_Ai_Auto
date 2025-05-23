@@ -56,7 +56,7 @@ def wait_for_input(timeout):
             return False  # Timeout reached
         mins, secs = divmod(remaining_time, 60)
         hours, mins = divmod(mins, 60)
-        sys.stdout.write("\rTime left: {:02d}:{:02d}:{:02d} Press Enter to resume Now... ".format(int(hours), int(mins), int(secs)) )
+        sys.stdout.write("\rTime left: {:02d}:{:02d}:{:02d} Press Enter to resume Now... ".format(int(hours), int(mins), int(secs)))
         sys.stdout.flush()
 
         # Check if a key was pressed
@@ -70,28 +70,107 @@ def wait_for_input(timeout):
 
 
 def select_account():
+    """Select an account for login"""
     accounts = [f for f in os.listdir("accounts") if os.path.isdir(os.path.join("accounts", f))]
     if not accounts:
         print("No accounts found in the 'accounts' directory.")
-        return None
+        exit(1)
+    print("\n" + "=" * 50)
     print("Available accounts:")
+    print("=" * 50)
     for i, account in enumerate(accounts):
         print(f"{i + 1}. {account}")
+    print("-" * 50)
 
     while True:
         choice = input("Select an account (1-{}): ".format(len(accounts)))
         if choice.isdigit() and 1 <= int(choice) <= len(accounts):
-            print(f"Selected account: {accounts[int(choice) - 1]}")
-            return accounts[int(choice) - 1]
+            selected_account = accounts[int(choice) - 1]
+            print(f"Selected account: {selected_account}")
+            return selected_account
         else:
             print("Invalid choice.")
+
+
+def select_config():
+    """Select a configuration from the configs directory"""
+    if not os.path.exists("configs"):
+        os.makedirs("configs")
+        print("Created 'configs' directory. Please add config folders with config.json files.")
+        exit(1)
         
+    configs = [f for f in os.listdir("configs") if os.path.isdir(os.path.join("configs", f))]
+    if not configs:
+        print("No configuration folders found in the 'configs' directory.")
+        exit(1)
+        
+    print("\n" + "=" * 50)
+    print("Available configurations:")
+    print("=" * 50)
+    for i, config in enumerate(configs):
+        print(f"{i + 1}. {config}")
+    print("-" * 50)
+
+    while True:
+        choice = input("Select a configuration (1-{}): ".format(len(configs)))
+        if choice.isdigit() and 1 <= int(choice) <= len(configs):
+            selected_config = configs[int(choice) - 1]
+            # Verify that config.json exists in the selected folder
+            config_path = os.path.join("configs", selected_config, "config.json")
+            if not os.path.exists(config_path):
+                print(f"Error: config.json not found in {selected_config} folder")
+                continue
+                
+            print(f"Selected config: {selected_config}")
+            return selected_config
+        else:
+            print("Invalid choice.")
+
+
+def load_config(config_name):
+    """Load and validate a configuration file"""
+    config_path = os.path.join("configs", config_name, "config.json")
+    try:
+        with open(config_path, "r") as f:
+            config = json.load(f)
+            # Validate required fields
+            required_fields = [
+                "project_link", 
+                "initial_prompt", 
+                "generation_prompts", 
+                "text_to_be_replaced_by_video_number"
+            ]
+            for field in required_fields:
+                if field not in config:
+                    raise KeyError(f"Missing required field: {field}")
+            return config
+    except FileNotFoundError:
+        print(f"Config file not found: {config_path}")
+        return None
+    except json.JSONDecodeError:
+        print(f"Invalid JSON in config file: {config_path}")
+        return None
+    except KeyError as e:
+        print(f"Invalid config file: {e}")
+        return None
 
 
 def claude_automation():
-    continue_generation = True
+    print("\n" + "=" * 80)
+    print(" Claude AI Automation ".center(80, "="))
+    print("=" * 80 + "\n")
 
+    # Select account and config separately
     account = select_account()
+    config_name = select_config()
+    
+    # Load and validate the configuration
+    config = load_config(config_name)
+    if not config:
+        print("Failed to load valid configuration. Exiting.")
+        return
+
+    # Get video number range
     while True:
         try:
             video_numbers = input("Enter the video numbers (range eg 1-15): ").split("-")
@@ -101,33 +180,19 @@ def claude_automation():
             break
         except Exception as e:
             print(f"Error: {e}. Please enter the video numbers in the format 'start-end'.")
+    
+    # Initialize the browser
     driver = Driver(uc=True, headless=False)
     driver.maximize_window()
 
+    # Handle login
     handle_login(driver, account)
     print("Login successful!")
-    # random_scroll(driver)
+    
+    # Main automation loop
+    continue_generation = True
     try:
         while continue_generation:
-            config_path = os.path.join("accounts", account, "config.json")
-            if not os.path.exists(config_path):
-                print(f"Config file not found for account {account}.")
-                continue_generation = False
-                break
-            
-            with open(config_path, "r") as f:
-                config = json.load(f)
-                try:
-                    config["project_link"]
-                    config["initial_prompt"]
-                    config["generation_prompts"]
-                    config["text_to_be_replaced_by_video_number"]
-                except KeyError as e:
-                    print(f"Missing key in config file for account {account}: {e}")
-                    continue_generation = False
-                    break
-                   
-            
             try:
                 for video_number in range(int(video_numbers[0]), int(video_numbers[1]) + 1):
                     print(f"Processing video number: {video_number}")
@@ -141,8 +206,6 @@ def claude_automation():
                     else:
                         print(f"Warning: '{text_to_be_replaced}' not found in the initial prompt.")
                         input("Press Enter to continue...")
-                    
-                    
                     
                     print(f"Entering Initial Prompt: {initial_prompt}")
                     enter_prompt(driver, initial_prompt)
@@ -164,9 +227,8 @@ def claude_automation():
                             limit_reached_seq(driver)
 
                         wait_for_response(driver)
-                        
                     
-                    download_artifacts(driver, video_number, account)
+                    download_artifacts(driver, str(video_number), account)
             except Exception as e:
                 print(f"An error occurred: {e}")
 
@@ -186,7 +248,6 @@ def claude_automation():
                 continue_generation = False
                 print("Exiting the program.")
     finally:
-        # logging.error(f"An error occurred: {e}")
         save_cookies(driver, account)
         driver.quit()
 

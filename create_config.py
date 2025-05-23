@@ -8,75 +8,75 @@ def create_config_helper():
     print(" Claude AI Automation Config Creator ".center(80, "="))
     print("=" * 80)
     
-    # Check if accounts directory exists
-    if not os.path.exists("accounts"):
-        print("Creating accounts directory...")
-        os.makedirs("accounts")
+    # Check if configs directory exists
+    if not os.path.exists("configs"):
+        print("Creating configs directory...")
+        os.makedirs("configs")
     
-    # Get existing accounts
-    accounts = [f for f in os.listdir("accounts") if os.path.isdir(os.path.join("accounts", f))]
+    # Get existing configs
+    configs = [f for f in os.listdir("configs") if os.path.isdir(os.path.join("configs", f))]
     
     # Present options
     print("\n📝 What would you like to do?")
-    print("1. Create config for a new account")
-    if accounts:
-        print("2. Update config for an existing account")
+    print("1. Create a new configuration")
+    if configs:
+        print("2. Update an existing configuration")
     
-    choice = input("\nEnter your choice (1" + ("/2" if accounts else "") + "): ")
+    choice = input("\nEnter your choice (1" + ("/2" if configs else "") + "): ")
     
     if choice == "1":
-        account_name = create_new_account()
-    elif choice == "2" and accounts:
-        account_name = select_account(accounts)
+        config_name = create_new_config()
+    elif choice == "2" and configs:
+        config_name = select_config(configs)
     else:
         print("Invalid choice. Please try again.")
         return
     
-    # Create the config file for the selected account
-    create_config_file(account_name)
+    # Create/edit the config file for the selected configuration
+    create_config_file(config_name)
     
     print("\n✅ Config file created successfully!")
-    print(f"Location: accounts/{account_name}/config.json")
+    print(f"Location: configs/{config_name}/config.json")
     print("\nYou can now run the main script to use this configuration.")
 
-def create_new_account():
-    """Create a new account directory"""
-    print("\n🆕 Creating a new account")
-    account_name = input("Enter account name (e.g., 'my_claude_account'): ").strip()
+def create_new_config():
+    """Create a new configuration directory"""
+    print("\n🆕 Creating a new configuration")
+    config_name = input("Enter configuration name (e.g., 'sleep_story_config'): ").strip()
     
-    # Validate account name
-    if not account_name or any(c in account_name for c in '\\/:*?"<>|'):
-        print("Invalid account name. Please avoid special characters.")
-        return create_new_account()
+    # Validate config name
+    if not config_name or any(c in config_name for c in '\\/:*?"<>|'):
+        print("Invalid configuration name. Please avoid special characters.")
+        return create_new_config()
     
-    account_path = os.path.join("accounts", account_name)
+    config_path = os.path.join("configs", config_name)
     
-    if os.path.exists(account_path):
-        print(f"Account '{account_name}' already exists!")
-        overwrite = input("Do you want to overwrite it? (y/n): ")
+    if os.path.exists(config_path):
+        print(f"Configuration '{config_name}' already exists!")
+        overwrite = input("Do you want to update it instead? (y/n): ")
         if overwrite.lower() != 'y':
-            return create_new_account()
+            return create_new_config()
     
-    # Create account directory
-    os.makedirs(account_path, exist_ok=True)
+    # Create config directory
+    os.makedirs(config_path, exist_ok=True)
     
-    return account_name
+    return config_name
 
-def select_account(accounts):
-    """Select an existing account"""
-    print("\n📂 Select an account to update its config:")
-    for i, account in enumerate(accounts):
-        print(f"{i+1}. {account}")
+def select_config(configs):
+    """Select an existing configuration"""
+    print("\n📂 Select a configuration to update:")
+    for i, config in enumerate(configs):
+        print(f"{i+1}. {config}")
     
     try:
-        choice = int(input("\nEnter account number: "))
-        if 1 <= choice <= len(accounts):
-            return accounts[choice-1]
+        choice = int(input("\nEnter configuration number: "))
+        if 1 <= choice <= len(configs):
+            return configs[choice-1]
     except ValueError:
         pass
     
     print("Invalid selection. Please try again.")
-    return select_account(accounts)
+    return select_config(configs)
 
 def get_multiline_input(prompt=""):
     """Get multi-line input from user"""
@@ -98,26 +98,26 @@ def get_multiline_input(prompt=""):
     
     return "\n".join(lines)
 
-def create_config_file(account_name):
+def create_config_file(config_name):
     """Create a config.json file with user input"""
     print("\n" + "-" * 80)
-    print(f" Creating config for '{account_name}' ".center(80, "-"))
+    print(f" Creating configuration '{config_name}' ".center(80, "-"))
     print("-" * 80)
     
     config = {}
     
     # Check if config already exists and offer to load it as a starting point
-    config_path = os.path.join("accounts", account_name, "config.json")
+    config_path = os.path.join("configs", config_name, "config.json")
     if os.path.exists(config_path):
-        print(f"\nFound existing config for '{account_name}'.")
+        print(f"\nFound existing configuration '{config_name}'.")
         load_existing = input("Do you want to use it as a starting point? (y/n): ")
         if load_existing.lower() == 'y':
             try:
                 with open(config_path, "r") as f:
                     config = json.load(f)
-                print("Existing config loaded. You can update the values as needed.")
+                print("Existing configuration loaded. You can update the values as needed.")
             except json.JSONDecodeError:
-                print("Error reading existing config. Starting fresh.")
+                print("Error reading existing configuration. Starting fresh.")
     
     # Project link
     print("\n" + "-" * 40)
@@ -208,7 +208,7 @@ def create_config_file(account_name):
     
     if not config["initial_prompt"]:
         print("Initial prompt cannot be empty!")
-        return create_config_file(account_name)
+        return create_config_file(config_name)
     
     # Check if placeholder is in the initial prompt
     if text_to_replace not in config["initial_prompt"]:
@@ -217,7 +217,7 @@ def create_config_file(account_name):
         print(f"Please add '{text_to_replace}' somewhere in your prompt where the video number should appear.")
         fix = input("Do you want to update your placeholder or initial prompt? (y/n): ")
         if fix.lower() == 'y':
-            return create_config_file(account_name)
+            return create_config_file(config_name)
     
     # Generation prompts
     print("\n" + "-" * 40)
@@ -269,7 +269,7 @@ def create_config_file(account_name):
     print("\n" + "=" * 60)
     print(" CONFIGURATION REVIEW ".center(60, "="))
     print("=" * 60)
-    print(f"Account: {account_name}")
+    print(f"Configuration: {config_name}")
     print(f"Project Link: {config['project_link']}")
     print(f"Text Placeholder: {config['text_to_be_replaced_by_video_number']}")
     print(f"Initial Prompt: {config['initial_prompt'][:50]}..." if len(config['initial_prompt']) > 50 else f"Initial Prompt: {config['initial_prompt']}")
@@ -280,14 +280,15 @@ def create_config_file(account_name):
         print("Configuration not saved.")
         retry = input("Do you want to start over? (y/n): ")
         if retry.lower() == 'y':
-            return create_config_file(account_name)
+            return create_config_file(config_name)
         return
     
     # Create a backup of the existing config if it exists
+    backup_path = None
     if os.path.exists(config_path):
         backup_path = config_path + ".backup"
         shutil.copy2(config_path, backup_path)
-        print(f"Backup of previous config saved to: {backup_path}")
+        print(f"Backup of previous configuration saved to: {backup_path}")
     
     # Save config
     try:
@@ -296,7 +297,7 @@ def create_config_file(account_name):
         print("Configuration saved successfully!")
     except Exception as e:
         print(f"Error saving configuration: {e}")
-        if os.path.exists(backup_path):
+        if backup_path and os.path.exists(backup_path):
             print("Restoring from backup...")
             shutil.copy2(backup_path, config_path)
 

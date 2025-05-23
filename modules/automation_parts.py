@@ -2,6 +2,7 @@ import pickle
 import os
 import time
 import random
+from typing import Optional
 from seleniumbase import Driver
 from selenium import webdriver
 from selenium.webdriver.common.action_chains import ActionChains
@@ -26,7 +27,7 @@ def js_click_element(driver:webdriver.Chrome, element):
     driver.execute_script("arguments[0].click();", element)
 
 
-def load_cookies(account:str)->dict:
+def load_cookies(account:str)->Optional[dict]:
     """Load cookies from file"""
     cookie_file_path = os.path.join("accounts", account, "claude_cookies.pkl")
     if os.path.exists(cookie_file_path):
@@ -46,7 +47,7 @@ def save_cookies(driver, account):
     print("Cookies saved successfully")
 
 
-def random_sleep(min_seconds=1, max_seconds=3):
+def random_sleep(min_seconds=1.0, max_seconds=3.0):
     """Sleep for a random amount of time between min and max seconds"""
     time.sleep(random.uniform(min_seconds, max_seconds))
 
@@ -56,7 +57,7 @@ def check_limit_reached(driver:webdriver.Chrome)->bool:
         return True
     except Exception as e:
         return False
-def get_reactivation_time(driver:webdriver.Chrome)->str:
+def get_reactivation_time(driver:webdriver.Chrome)->Optional[str]:
     try:
         reactivation_time_element = driver.find_element(By.XPATH, '//div[contains(text(), "limit reached")]/span')
         reactivation_time = reactivation_time_element.text
