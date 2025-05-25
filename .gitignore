@@ -6,3 +6,6 @@ extract_cookies.py
 *.txt
 *.backup
 *.log
+_internal/
+main.exe
+create_config.exe

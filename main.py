@@ -1,3 +1,4 @@
+import traceback
 from seleniumbase import Driver
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
@@ -23,6 +24,7 @@ def sleep_until_time(time_str):
         target_time = datetime.datetime.strptime(time_str.strip(), "%I:%M %p").time()
     except ValueError:
         print(f"Error: Could not parse time string '{time_str}'. Expected format like '1:30 AM'")
+        logging.error(traceback.format_exc())
         return
     
     # Get current time
@@ -74,7 +76,7 @@ def select_account():
     accounts = [f for f in os.listdir("accounts") if os.path.isdir(os.path.join("accounts", f))]
     if not accounts:
         print("No accounts found in the 'accounts' directory.")
-        exit(1)
+        sys.exit(1)
     print("\n" + "=" * 50)
     print("Available accounts:")
     print("=" * 50)
@@ -97,12 +99,12 @@ def select_config():
     if not os.path.exists("configs"):
         os.makedirs("configs")
         print("Created 'configs' directory. Please add config folders with config.json files.")
-        exit(1)
+        sys.exit(1)
         
     configs = [f for f in os.listdir("configs") if os.path.isdir(os.path.join("configs", f))]
     if not configs:
         print("No configuration folders found in the 'configs' directory.")
-        exit(1)
+        sys.exit(1)
         
     print("\n" + "=" * 50)
     print("Available configurations:")
@@ -180,6 +182,7 @@ def claude_automation():
             break
         except Exception as e:
             print(f"Error: {e}. Please enter the video numbers in the format 'start-end'.")
+            logging.info(traceback.format_exc())
     
     # Initialize the browser
     driver = Driver(uc=True, headless=False)
@@ -228,9 +231,11 @@ def claude_automation():
 
                         wait_for_response(driver)
                     
-                    download_artifacts(driver, str(video_number), account)
+                    output_dir = account+"-"+config_name
+                    download_artifacts(driver, str(video_number), output_dir)
             except Exception as e:
                 print(f"An error occurred: {e}")
+                logging.info(traceback.format_exc())
 
             choice = input(f"Do you want to continue with different video numbers? (y/n): ")
             if 'y' in choice.lower():
@@ -244,6 +249,7 @@ def claude_automation():
                         break
                     except Exception as e:
                         print(f"Error: {e}. Please enter the video numbers in the format 'start-end'.")
+                        logging.info(traceback.format_exc())
             else:
                 continue_generation = False
                 print("Exiting the program.")

@@ -2,7 +2,9 @@ import pickle
 import os
 import time
 import random
+import traceback
 from typing import Optional
+import pyperclip
 from seleniumbase import Driver
 from selenium import webdriver
 from selenium.webdriver.common.action_chains import ActionChains
@@ -11,6 +13,9 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import TimeoutException
+
+import logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s', filename='automation.log', filemode='a')
 
 
 def clean_file_name(file_name:str)->str:
@@ -65,6 +70,7 @@ def get_reactivation_time(driver:webdriver.Chrome)->Optional[str]:
         return reactivation_time
     except Exception as e:
         print("Error getting reactivation time:", e)
+        logging.error(f"Error getting reactivation time: {traceback.format_exc()}")
         return None
 
 def handle_login(driver:webdriver.Chrome, account:str):
@@ -147,15 +153,33 @@ def download_artifacts(driver:webdriver.Chrome, video_number:str, account:str):
                 print(f"Error finding chapter name")
                 chapter_name = f"Chapter {i+1}"
                 print(f"Using chapter name:", chapter_name)
+
+        ActionChains(driver).scroll_to_element(artifact_button).perform()
         js_click_element(driver, artifact_button)
         random_sleep(0.5, 1.5)
-        # Wait for the download button to appear
-        artifact_section_paragraphs = WebDriverWait(driver, 10).until(
-            EC.presence_of_all_elements_located((By.XPATH, '//div[@id="markdown-artifact"]//p'))
-        )
+
         complete_text = ""
-        for paragraph in artifact_section_paragraphs:
-            complete_text += paragraph.text + "\n"
+        try:
+            copy_button = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, '//div[contains(text(),"Copy")]/parent::div/parent::button')))
+            pyperclip.copy("")  # Clear clipboard before copying
+            click_element(driver, copy_button)
+            random_sleep(0.5, 1.5)
+            random_sleep(0.5, 1.5)
+            # Get the copied text from clipboard
+            complete_text = pyperclip.paste()
+            logging.info(f"Used copy button to get complete text for chapter: {chapter_name}")
+        except TimeoutException:
+            try:
+                complete_text = ""
+                artifact_section_paragraphs = WebDriverWait(driver, 10).until(EC.presence_of_all_elements_located((By.XPATH, '//div[@id="markdown-artifact"]//p')))
+                for paragraph in artifact_section_paragraphs:
+                    complete_text += paragraph.text + "\n"
+                logging.info(f"Used paragraphs to get complete text for chapter: {chapter_name}")
+
+            except Exception as e:
+                print("Error finding artifact section paragraphs:", e)
+                logging.error(f"Error finding artifact section paragraphs: {traceback.format_exc()}")
+
         if video_name == "":
             try:
                 video_name_element = driver.find_element(By.XPATH, '//button[@data-testid="chat-menu-trigger"]/div/div')
@@ -177,16 +201,11 @@ def download_artifacts(driver:webdriver.Chrome, video_number:str, account:str):
     
     # After all artifacts are downloaded, rename them based on modification time
     output_dir = os.path.join("outputFiles", account, video_name)
-    
-    # Get all .txt files in the directory
     files = [os.path.join(output_dir, f) for f in os.listdir(output_dir) if f.endswith('.txt')]
     
     # Sort files by modification time
     files.sort(key=os.path.getmtime)
-
     
-    
-    # Rename files to chapter-1, chapter-2, etc.
     for i, file_path in enumerate(files, 1):
         new_name = os.path.join(output_dir, f"Chapter-{i}.txt")
         os.rename(file_path, new_name)
@@ -207,16 +226,24 @@ def enter_prompt(driver:webdriver.Chrome, prompt:str):
         actions.send_keys(char)
         actions.perform()
         random_sleep(0.02, 0.05)
+    while True:
+        try:
+            WebDriverWait(driver, 60).until(EC.element_to_be_clickable((By.XPATH, '//button[@aria-label="Send message"]')))
+            break
+        except TimeoutException:
+            print("Send button not found!")
     actions.send_keys(Keys.RETURN).perform()
     random_sleep(1, 1.5)
 
 def wait_for_response(driver:webdriver.Chrome):
+    current_time = time.time()
     while True:
+        if time.time() - current_time > 900:
+            print("Waiting for response timed out after 15 minutes.")
+            return
         try:
             print("Waiting for response to start...")
-            response = WebDriverWait(driver, 10).until(
-                EC.presence_of_element_located((By.XPATH, '//button[@aria-label="Stop response"]'))
-            )
+            response = WebDriverWait(driver, 100).until(EC.presence_of_element_located((By.XPATH, '//button[@aria-label="Stop response"]')))
             print("Response started.")
             break
         except:
