@@ -177,12 +177,11 @@ def claude_automation():
             video_numbers = input("Enter the video numbers (comma seperated eg 24,27,22): ").split(",")
             if len(video_numbers) == 0:
                 raise ValueError("Invalid input")
+            print(f"No of videos to process: {len(video_numbers)}")
             print(f"Selected video numbers: {video_numbers}\ni.e. {[i for i in video_numbers]}")
-            # Validate video numbers
             for num in video_numbers:
                 if not num.strip().isdigit():
                     raise ValueError(f"Invalid video number: {num}")
-                int(num.strip())  # Ensure they can be converted to int
             video_numbers = [int(num.strip()) for num in video_numbers]
             break
         except Exception as e:
@@ -251,11 +250,12 @@ def claude_automation():
                         video_numbers = input("Enter the video numbers (comma seperated eg 24,27,22): ").split(",")
                         if len(video_numbers) == 0:
                             raise ValueError("Invalid input")
+                        print(f"No of videos to process: {len(video_numbers)}")
                         print(f"Selected video numbers: {video_numbers}\ni.e. {[i for i in video_numbers]}")
-                        # Validate video numbers
                         for num in video_numbers:
                             if not num.strip().isdigit():
                                 raise ValueError(f"Invalid video number: {num}")
+                        video_numbers = [int(num.strip()) for num in video_numbers]
                         break
                     except Exception as e:
                         print(f"Error: {e}. Please enter the video numbers in the correct format.")
