@@ -172,20 +172,25 @@ def claude_automation():
         print("Failed to load valid configuration. Exiting.")
         return
 
-    # Get video number range
     while True:
         try:
-            video_numbers = input("Enter the video numbers (range eg 1-15): ").split("-")
-            if len(video_numbers) != 2:
+            video_numbers = input("Enter the video numbers (comma seperated eg 24,27,22): ").split(",")
+            if len(video_numbers) == 0:
                 raise ValueError("Invalid input")
-            print(f"Selected video numbers: {video_numbers[0]} to {video_numbers[1]}\ni.e. {[i for i in range(int(video_numbers[0]), int(video_numbers[1]) + 1)]}")
+            print(f"Selected video numbers: {video_numbers}\ni.e. {[i for i in video_numbers]}")
+            # Validate video numbers
+            for num in video_numbers:
+                if not num.strip().isdigit():
+                    raise ValueError(f"Invalid video number: {num}")
+                int(num.strip())  # Ensure they can be converted to int
+            video_numbers = [int(num.strip()) for num in video_numbers]
             break
         except Exception as e:
-            print(f"Error: {e}. Please enter the video numbers in the format 'start-end'.")
+            print(f"Error: {e}. Please enter the video numbers in the correct format.")
             logging.info(traceback.format_exc())
     
     # Initialize the browser
-    driver = Driver(uc=True, headless=False)
+    driver = Driver(uc=True, headless=False,)
     driver.maximize_window()
 
     # Handle login
@@ -197,7 +202,8 @@ def claude_automation():
     try:
         while continue_generation:
             try:
-                for video_number in range(int(video_numbers[0]), int(video_numbers[1]) + 1):
+                for video_number in video_numbers:
+                    
                     print(f"Processing video number: {video_number}")
                     driver.get(config["project_link"])
 
@@ -242,13 +248,17 @@ def claude_automation():
                 continue_generation = True
                 while True:
                     try:
-                        video_numbers = input("Enter the video numbers (range eg 1-15): ").split("-")
-                        if len(video_numbers) != 2:
+                        video_numbers = input("Enter the video numbers (comma seperated eg 24,27,22): ").split(",")
+                        if len(video_numbers) == 0:
                             raise ValueError("Invalid input")
-                        print(f"Selected video numbers: {video_numbers[0]} to {video_numbers[1]}\ni.e. {[i for i in range(int(video_numbers[0]), int(video_numbers[1]) + 1)]}")
+                        print(f"Selected video numbers: {video_numbers}\ni.e. {[i for i in video_numbers]}")
+                        # Validate video numbers
+                        for num in video_numbers:
+                            if not num.strip().isdigit():
+                                raise ValueError(f"Invalid video number: {num}")
                         break
                     except Exception as e:
-                        print(f"Error: {e}. Please enter the video numbers in the format 'start-end'.")
+                        print(f"Error: {e}. Please enter the video numbers in the correct format.")
                         logging.info(traceback.format_exc())
             else:
                 continue_generation = False
