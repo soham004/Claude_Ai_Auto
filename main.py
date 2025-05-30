@@ -1,9 +1,6 @@
 import traceback
 from seleniumbase import Driver
-from selenium.webdriver.common.action_chains import ActionChains
-from selenium.webdriver.common.keys import Keys
 import sys
-import msvcrt
 from modules.automation_parts import *
 import json
 
