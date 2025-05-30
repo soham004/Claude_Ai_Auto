@@ -5,7 +5,8 @@ import random
 import traceback
 from typing import Optional
 import pyperclip
-from seleniumbase import Driver
+import sys
+import msvcrt  
 from selenium import webdriver
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
@@ -213,6 +214,7 @@ def download_artifacts(driver:webdriver.Chrome, video_number:str, account:str):
 
 
 def enter_prompt(driver:webdriver.Chrome, prompt:str):
+    actions = ActionChains(driver)
     try:
         # Wait for the input field to be present
         WebDriverWait(driver, 20).until(
@@ -221,7 +223,6 @@ def enter_prompt(driver:webdriver.Chrome, prompt:str):
     except TimeoutException:
         print("Input field not found!")
         return
-    actions = ActionChains(driver)
     for char in prompt:
         actions.send_keys(char)
         actions.perform()
@@ -231,9 +232,82 @@ def enter_prompt(driver:webdriver.Chrome, prompt:str):
             WebDriverWait(driver, 60).until(EC.element_to_be_clickable((By.XPATH, '//button[@aria-label="Send message"]')))
             break
         except TimeoutException:
-            print("Send button not found!")
+            if check_limit_reached(driver):
+                limit_reached_seq(driver)
+                break
+            else:
+                print("Send button not found!")
+
     actions.send_keys(Keys.RETURN).perform()
     random_sleep(1, 1.5)
+
+
+def wait_for_input(timeout):
+    """Waits for Enter key press with a timeout while displaying a countdown (Windows version)."""
+    start_time = time.time()
+    while True:
+        remaining_time = timeout - (time.time() - start_time)
+        if remaining_time <= 0:
+            print("\nTime's up!.")
+            return False  # Timeout reached
+        mins, secs = divmod(remaining_time, 60)
+        hours, mins = divmod(mins, 60)
+        sys.stdout.write("\rTime left: {:02d}:{:02d}:{:02d} Press Enter to resume Now... ".format(int(hours), int(mins), int(secs)))
+        sys.stdout.flush()
+
+        # Check if a key was pressed
+        if msvcrt.kbhit():
+            key = msvcrt.getch()
+            if key == b'\r':  # Enter key is detected
+                print("\nUser pressed Enter!")
+                return True  # Input received
+
+        time.sleep(0.1)  # Reduce CPU usage
+
+
+def sleep_until_time(time_str:str):
+    
+    import datetime
+    import time
+    
+    # Parse the time string
+    try:
+        target_time = datetime.datetime.strptime(time_str.strip(), "%I:%M %p").time()
+    except ValueError:
+        print(f"Error: Could not parse time string '{time_str}'. Expected format like '1:30 AM'")
+        logging.error(traceback.format_exc())
+        return
+    
+    # Get current time
+    now = datetime.datetime.now()
+    
+    # Create target datetime (combines today's date with target time)
+    target_datetime = datetime.datetime.combine(now.date(), target_time)
+    
+    # If target time has already passed today, set it for tomorrow
+    if target_datetime < now:
+        target_datetime += datetime.timedelta(days=1)
+    
+    # Calculate seconds until target time
+    seconds_to_wait = (target_datetime - now).total_seconds()
+    seconds_to_wait += 10*60  # Add 10 minutes buffer
+    
+    print(f"Waiting until {time_str} ({seconds_to_wait:.0f} seconds from now)")
+    
+    # Using your existing wait_for_input function which shows a countdown
+    # and allows user to skip by pressing Enter
+    return wait_for_input(seconds_to_wait)
+
+
+def limit_reached_seq(driver:webdriver.Chrome):
+    reactivation_time = get_reactivation_time(driver)
+    if reactivation_time == None:
+        print("Limit reached! waiting for 5 hours 10 mins...")
+        wait_for_input(5*60*60 + 10*60)  # Wait for 5 hours 10 minutes
+    else:
+        sleep_until_time(reactivation_time)
+    driver.get(driver.current_url)
+    ActionChains(driver).send_keys(Keys.RETURN).perform()
 
 def wait_for_response(driver:webdriver.Chrome):
     current_time = time.time()
